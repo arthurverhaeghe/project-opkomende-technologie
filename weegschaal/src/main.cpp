@@ -1,135 +1,117 @@
 #include <Arduino.h>
-#include "HX711.h"
 #include <string>
 #include <iostream>
-#include <FastLED.h>
+
 // ledstrip constants
-const int aantal_leds = 3;
-#define NUM_LEDS aantal_leds
+#include <FastLED.h>
+const int LED_amount = 3;
+#define NUM_LEDS LED_amount
 #define LED_PIN 25
-CRGB leds[NUM_LEDS];
+CRGB LEDs[NUM_LEDS];
 
 // HX711 constants
+#include "HX711.h"
 const int LOADCELL_DOUT_PIN = 26;
 const int LOADCELL_SCK_PIN = 18;
 HX711 scale;
+int const_correctionfactor = 0;
 
-std::string gewicht = "";
-int gewicht_waarde = 0;
-int ADC_waarde = 0;
-int correctiefactor = 0;
-int gewicht_bak = 0;
-float procentueel_gewicht = 0;
-int leds_aan = 0;
+const int buttonPin = 27;
+void blink(CRGB color, int time, int first_number, int final_number)
+{
+  for (int i = first_number - 1; i <= final_number - 1; i++)
+  {
+    LEDs[i] = color;
+  }
+  FastLED.show();
+  delay(time);
+  for (int i = first_number - 1; i <= final_number - 1; i++)
+  {
+    LEDs[i] = CRGB ::Black;
+  }
+  FastLED.show();
+}
 
-bool enter = false;
+void fill(CRGB color, int first_number, int final_number)
+{
+  for (int i = 0; i + 1 <= LED_amount; i++)
+  {
+    if (i + 1 >= first_number && i + 1 <= final_number)
+    {
+      LEDs[i] = color;
+    }
+    else
+    {
+      LEDs[i] = CRGB ::Black;
+    }
+  }
+  FastLED.show();
+}
+
+int loadcell_setup()
+{
+  int correctionfactor = 0;
+  String start = "start";
+  while (start != Serial.readString()) // type start and send as text to start this program
+  {
+    delay(100);
+  }
+  Serial.println("Place your referance weight on the scale and enter the weight in grams.");
+  int gewicht_int = 0;
+  while (gewicht_int == 0)
+  {
+    if (Serial.available() != 0)
+    {
+      gewicht_int = (Serial.readString()).toInt(); // Serial.println(gewicht_int);
+      int gewicht_ADC = scale.get_units(20);
+      correctionfactor = gewicht_ADC / gewicht_int;
+      Serial.println("correctionfactor: " + String(gewicht_ADC) + "/" + String(gewicht_int) + " = " + String(correctionfactor));
+      scale.set_scale(correctionfactor);
+      Serial.println("the scale is now calebrated");
+    }
+    delay(100);
+  }
+  return correctionfactor;
+}
 
 void setup()
 {
   Serial.begin(57600);
+  pinMode(buttonPin, INPUT_PULLUP);
 
-  FastLED.addLeds<WS2812, LED_PIN, RGB>(leds, NUM_LEDS);
-  FastLED.setBrightness(10); // 0-255
+  // led setup
+  FastLED.addLeds<WS2812, LED_PIN, RGB>(LEDs, NUM_LEDS);
+  FastLED.setBrightness(255); // valeu between 0-255
+  fill_solid(LEDs, NUM_LEDS, CRGB::Black);
+  FastLED.show();
 
+  // loadcell setup
   scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
-  scale.set_scale(); // this value is obtained by calibrating the scale with known weights; see the README for details
+  scale.set_scale();
   scale.tare();
-
-  Serial.println("press enter when ready to continue to the next step");
-  Serial.print("enter reference weight in grams:");
-  while (enter == false)
-  {
-    if (Serial.available() != 0)
-    {
-      int getal = Serial.read();
-      Serial.print((char)getal);
-      gewicht += (char)getal;
-      if (getal == 10)
-      {
-        gewicht_waarde = std::stoi(gewicht);
-        enter = true;
-      }
-    }
-  }
-  enter = false;
-  Serial.println("place referace weight on scale and press enter to continue");
-  while (enter == false)
-  {
-    if (Serial.available() != 0)
-    {
-      int getal = Serial.read();
-      if (getal == 10)
-      {
-        enter = true;
-      }
-    }
-  }
-  enter = false;
-  ADC_waarde = scale.get_units(10);
-  Serial.print("correctionfactor: ");
-  Serial.print(ADC_waarde);
-  Serial.print(" / ");
-  Serial.print(gewicht_waarde);
-  Serial.print(" = ");
-  correctiefactor = ADC_waarde / gewicht_waarde;
-  Serial.println(correctiefactor);
-  scale.set_scale(correctiefactor); // this value is obtained by calibrating the scale with known weights; see the README for details
-  Serial.println("the scale is now calebrated put the toys on in the bin and press enter to confirm the bin is full");
-  while (enter == false)
-  {
-    if (Serial.available() != 0)
-    {
-      int getal = Serial.read();
-      if (getal == 10)
-      {
-        gewicht_bak = scale.get_units(10);
-        enter = true;
-      }
-    }
-  }
 }
 
 void loop()
 {
-  Serial.print("| average:\t");
-  Serial.println(scale.get_units(10), 1);
-  procentueel_gewicht = scale.get_units(10) / gewicht_bak;
-  int leds_gewicht = procentueel_gewicht * aantal_leds;
-  Serial.println(leds_gewicht);
-  if (leds_aan < leds_gewicht)
+  blink(CRGB::Blue, 500, 1, 3);
+  float full_bin = scale.get_units(20); // Serial.print(full_bin); //testcode
+  while (digitalRead(buttonPin) != 0)
   {
-    leds_aan += 1;
-    leds[leds_aan] = CRGB ::Red;
-    FastLED.show();
-    Serial.println(leds_aan);
-  }
-  if (leds_aan > leds_gewicht)
-  {
-    leds[leds_aan] = CRGB ::Black;
-    FastLED.show();
-    leds_aan -= 1;
-  }
-  scale.power_down(); // put the ADC in sleep mode
-  delay(5000);
-  scale.power_up();
-}
-/*
-void serial_monitor()
-{
-  while (enter == false)
-  {
-    if (Serial.available() != 0)
+    int amount_leds_on = round((LED_amount * (scale.get_units(5) / full_bin))); // Serial.println(amount_leds_on); // testcode
+    if (amount_leds_on == LED_amount)
     {
-      char asci_char = Serial.read();
-      Serial.print((char)asci_char);
-      std::string serial_monitor_string_output;
-      serial_monitor_string_output += (char)asci_char;
-      if (getal == 10)
-      {
-        gewicht_waarde = std::stoi(gewicht);
-        enter = true;
-      }
+      fill_solid(LEDs, NUM_LEDS, CRGB::Green);
+      FastLED.show();
+    }
+    else if (amount_leds_on > LED_amount)
+    {
+      blink(CRGB::Red, 500, 1, 3);
+    }
+    else
+    {
+      fill(CRGB::Yellow, 1, amount_leds_on);
+      blink(CRGB::Yellow, 500, amount_leds_on + 1, amount_leds_on + 1);
     }
   }
+  delay(100);
 }
-  */
