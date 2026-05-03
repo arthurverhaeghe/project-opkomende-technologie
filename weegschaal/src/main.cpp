@@ -4,7 +4,7 @@
 
 // ledstrip constants
 #include <FastLED.h>
-const int LED_amount = 3;
+const int LED_amount = 166;
 #define NUM_LEDS LED_amount
 #define LED_PIN 25
 CRGB LEDs[NUM_LEDS];
@@ -81,7 +81,7 @@ void setup()
 
   // led setup
   FastLED.addLeds<WS2812, LED_PIN, RGB>(LEDs, NUM_LEDS);
-  FastLED.setBrightness(255); // valeu between 0-255
+  FastLED.setBrightness(100); // valeu between 0-255
   fill_solid(LEDs, NUM_LEDS, CRGB::Black);
   FastLED.show();
 
@@ -93,7 +93,7 @@ void setup()
 
 void loop()
 {
-  blink(CRGB::Blue, 500, 1, 3);
+  blink(CRGB::Blue, 500, 1, LED_amount);
   float full_bin = scale.get_units(20); // Serial.print(full_bin); //testcode
   while (digitalRead(buttonPin) != 0)
   {
@@ -105,11 +105,11 @@ void loop()
     }
     else if (amount_leds_on > LED_amount)
     {
-      blink(CRGB::Red, 500, 1, 3);
+      blink(CRGB::Red, 500, 1, LED_amount);
     }
     else
     {
-      fill(CRGB::Yellow, 1, amount_leds_on);
+      fill(CRGB::Blue, 1, amount_leds_on);
       blink(CRGB::Yellow, 500, amount_leds_on + 1, amount_leds_on + 1);
     }
   }
