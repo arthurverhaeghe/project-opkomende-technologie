@@ -56,18 +56,18 @@ XXXX
 
 #### Gebruik
 
-In de kast zit een ESP32 die als server functioneerd en de logica regelt van wanneer een bak uit de kast gehaald mag worden.
-
-In elke bak zit een ESP32 die als client functioneerd en naar de server ESP32 zal luisteren.  
-
-De status van de solenoïde, de end switch en de load cell worden voor elke bak gedeeld met de server.  
+In de kast zit een ESP32 die als server functioneert en de logica regelt van wanneer een bak uit de kast gehaald mag worden. In elke bak zit een ESP32 die als client functioneert en naar de server ESP32 zal luisteren.  
   
-Er mag namelijk enkel maar een bak uit de kast gehaald worden als de volgende condities voldaan zijn:  
+De client stuurt elke 100ms een datapakket naar de server met daarin de status van de end switch. De server verwerkt deze informatie en stuurt op zijn beurt elke 100ms een pakket terug naar elke client met daarin de systeemtoestand en het commando voor de solenoïde.  
   
-* Er is op dat moment enkel maar één bak, waarvan de end switch contact verbroken heeft.  
-* Het gewicht in de bak is juist.  
-* Er is geen enkele solenoïde op dat moment ingeschakelt.  
+Een bak mag enkel uit de kast gehaald worden als aan de volgende condities voldaan zijn:  
+  
+* Er is op dat moment slechts één bak waarvan de end switch contact verbroken heeft.
+* Er is geen andere bak tegelijk actief (als meerdere end switches tegelijk contact verbreken, gaat het systeem in CONFLICT en wordt geen enkele solenoïde geactiveerd).
+* Het gewicht in de bak is correct.
 
-Als deze condities voldaan zijn zal er een datapakket teruggestuurd worden naar de client die de solenoïde zal doen activeren.  
-
-Wanneer de bak opnieuw in de kast geplaatst word word de solenoïde enkel maar gedeactiveerd als opnieuw diezelfde condities voldaan zijn.
+Als deze condities voldaan zijn, stuurt de server een commando terug naar de betreffende client, die dan de solenoïde activeert.  
+  
+Wanneer de end switch opnieuw contact maakt (bak terug in de kast), verdwijnt die client automatisch uit de actieve lijst en deactiveert de server het solenoïde-commando. De client zet de solenoïde dan onmiddellijk uit zodra hij het bijgewerkte pakket ontvangt.  
+  
+Als een client meer dan 5 seconden geen pakket stuurt, beschouwt de server die client als verloren (TIMEOUT) en wordt de solenoïde ook gedeactiveerd.  
