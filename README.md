@@ -48,15 +48,24 @@ Het ontwerp van PlayClean is gebaseerd op literatuuronderzoek, benchmarking, int
 
 ### Logica
 
-[Zie hier]() voor het schakel schema van de componenten.  
+[Zie hier](https://github.com/arthurverhaeghe/project-opkomende-technologie/blob/main/imgs/schakel%20schema.png) voor het schakel schema van de componenten.  
 
 #### Setup
 
-XXXX
+De load cell wordt bij het opstarten van de ESP32 eerst getared.  
+  
+Hierna zal het speelgoed in de bak geplaatst worden en zal een knop ingedrukt worden om het gewicht te bevestigen.  
+  
+Nu zal de LED strip van deze bak groen worden, wat aanduidt dat deze klaar is om in de kast te plaatsen.  
+  
 
 #### Gebruik
 
-In de kast zit een ESP32 die als server functioneert en de logica regelt van wanneer een bak uit de kast gehaald mag worden. In elke bak zit een ESP32 die als client functioneert en naar de server ESP32 zal luisteren.  
+Om de communicatie te realiseren tussen de ESP32s, word BLE gebruikt.  
+  
+In elke bak zit een ESP32, waarvan één bak zijn ESP32 zal functioneren als server, en alle andere bakken hun ESP32s als client.  
+  
+De bak met de server zal alle logica regelen van wanneer een bak uit de kast gehaald mag worden. De andere bakken zullen als client luisteren naar de server.  
   
 De client stuurt elke 100ms een datapakket naar de server met daarin de status van de end switch. De server verwerkt deze informatie en stuurt op zijn beurt elke 100ms een pakket terug naar elke client met daarin de systeemtoestand en het commando voor de solenoïde.  
   
@@ -65,7 +74,7 @@ Een bak mag enkel uit de kast gehaald worden als aan de volgende condities volda
 * Er is op dat moment slechts één bak waarvan de end switch contact verbroken heeft.
 * Er is geen andere bak tegelijk actief (als meerdere end switches tegelijk contact verbreken, gaat het systeem in CONFLICT en wordt geen enkele solenoïde geactiveerd).
 * Het gewicht in de bak is correct.
-
+  
 Als deze condities voldaan zijn, stuurt de server een commando terug naar de betreffende client, die dan de solenoïde activeert.  
   
 Wanneer de end switch opnieuw contact maakt (bak terug in de kast), verdwijnt die client automatisch uit de actieve lijst en deactiveert de server het solenoïde-commando. De client zet de solenoïde dan onmiddellijk uit zodra hij het bijgewerkte pakket ontvangt.  
