@@ -25,25 +25,27 @@ Het ontwerp van PlayClean is gebaseerd op literatuuronderzoek, benchmarking, int
 ## Uitwerking
 
 ### Lijst van gebruikte componenten
-
-* Een ESP32 in de kast die als server functioneert, waarop alle logica staat.
-  * Een batterij  
-  
-* Een ESP32 per bak die elk als unieke client functioneert, die naar de server luistert.
+ 
+* Een ESP32 per bak met daarop aangesloten:
   * Een solenoïde
-    * Deze staat default uitgeschakeld
+    * Deze staat default uitgeschakeld (veer duwd solenoïde naar beneden, wat de bak vastmaakt)
     * Als de solenoïde ingeschakeld is kan de bak uit de kast gehaald worden.
+    * Hier staat een diode over spanning in de omgekeerde richting tegen te gaan
+    * Bestuurd door de ESP32 met een transistor
+    * Aparte voeding van 9V x3
   * Een end switch
-    * Deze staat default ingeschakeld
+    * Deze staat default ingeschakeld (word tegen de kast geduwd)
     * Deze dient als input om aan te tonen dat de bak wil uitgehaald worden
+    * Word uiteindelijk vervangen door een 3 polige pogo connector voor redundancy
   * Een load cell
     * Zal het gewicht in de bak meten
+    * Heeft een loadcell amplifier ervoor geschakeld
   * Een led-strip
     * Zal blauw flikkeren wanneer de ESP32 geïnitialiseerd is.
     * Zal volledig groen branden als het correcte gewicht in de bak zit.
     * Zal een percentage van de LEDs in de strip uitschakelen naarmate hoeveel gewicht tekort is in de bak.
     * Zal volledig rood branden als er teveel gewicht in de bak zit.
-  * Een batterij
+  * Een batterij (9V) met buck converter naar 5V
   
 
 ### Logica
