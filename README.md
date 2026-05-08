@@ -63,7 +63,7 @@ Nu zal de LED strip van deze bak groen worden, wat aanduidt dat deze klaar is om
 
 #### Gebruik
 
-Om de communicatie te realiseren tussen de ESP32s, word BLE gebruikt.  
+Om de communicatie te realiseren tussen de ESP32s word BLE gebruikt.  
   
 In elke bak zit een ESP32, waarvan één bak zijn ESP32 zal functioneren als server, en alle andere bakken hun ESP32s als client.  
   
